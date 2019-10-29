@@ -1,20 +1,27 @@
-var mysql = require('mysql');
-var inquirer = require('inquirer');
+var inquirer = require("inquirer");
+
+var mysql = require("mysql");
+
+var clientItem;
+var clientQuantity;
+var dbQuantity;
+
 
 var connection = mysql.createConnection({
     host: "localhost",
     port: 3306,
     user: "root",
     password: "",
-    database: "bamazondb1"
-})
+    database: "bamazon_DB"
+
+});
 
 connection.connect(function (err) {
     if (err) throw err;
-    console.log("connection was a hit!");
+    queryItems();
 })
 
-function queryItems() {
+function queryItems () {
     connection.query("SELECT * FROM products", function (err, res) {
         if (err) throw err;
         console.log("-------------------------------");
@@ -23,8 +30,8 @@ function queryItems() {
             console.log(res[i].item_id + " | " + res[i].product_name + " | $" + res[i].price + " | " + res[i].stock_quantity + " in stock");
             console.log("---------------------------------")
         }
-
-
+    
+    
         console.log("-----------------------------------");
 
         // inquirer prompt
@@ -47,60 +54,60 @@ function queryItems() {
                     default: true
                 }
             ])
-            //  .then function
-            .then(function (inquirerResponse) {
+   //  .then function
+   .then(function (inquirerResponse) {
 
 
-                if (inquirerResponse.confirm) {
-                    clientItem = inquirerResponse.id
-                    clientQuantity = inquirerResponse.quantity
+    if (inquirerResponse.confirm) {
+        clientItem = inquirerResponse.id
+        clientQuantity = inquirerResponse.quantity
+        
+        getSelectedItem()
 
-                    getSelectedItem()
-
-                    console.log("\n you've chosen " + clientItem);
-                    console.log(" Chosen quantity " + clientQuantity);
-                } else {
-                    console.log("come back soon!")
-                    connection.end()
-                }
+        console.log("\n you've chosen " + clientItem);
+        console.log(" Chosen quantity " + clientQuantity);
+    } else {
+        console.log("come back soon!")
+        connection.end()
+    }
 
 
-            })
-    })
+})
+})
 }
 
 
 function getSelectedItem() {
-    connection.query("SELECT stock_quantity FROM products WHERE item_id =" + clientItem, function (err, res) {
+connection.query("SELECT stock_quantity FROM products WHERE item_id =" + clientItem, function (err, res) {
 
-        dbQuantity = res
-        for (i = 0; i < dbQuantity; i++) {
+dbQuantity = res
+for (i = 0; i < dbQuantity; i++) {
 
-            if (dbQuantity[i].stock_quantity < clientQuantity) {
+if(dbQuantity[i].stock_quantity < clientQuantity){
 
-                console.log("Insufficient quantity!")
-                console.log("______________________________")
-            } else {
-                getTotalCost();
-                connection.query("UPDATE products SET stock_quantity = " + (dbQuantity[i].stock_quantity - clientQuantity) + " WHERE item_id =" + clientItem)
+    console.log("Insufficient quantity!")
+    console.log("______________________________")
+}else{
+    getTotalCost();
+    connection.query("UPDATE products SET stock_quantity = " + (dbQuantity[i].stock_quantity - clientQuantity) + " WHERE item_id =" + clientItem)
 
-
-            }
-        }
-        connection.end();
-    })
+    
+}
+}
+connection.end();
+})
 };
-
+   
 
 function getTotalCost() {
-    connection.query("SELECT price FROM products WHERE item_id =" + clientItem, function (err, res) {
-        var price = res;
-        for (x = 0; x < price.length; x++) {
-            var convert = (price[x].price * clientQuantity).toFixed(2)
-            console.log(" total cost: $" + convert)
-            console.log(" Your order has been placed")
-            console.log("--------------------------------------------------------")
-        }
-    })
+connection.query("SELECT price FROM products WHERE item_id =" + clientItem, function (err, res) {
+var price = res;
+for(x = 0; x < price.length; x++){
+var convert = (price[x].price * clientQuantity).toFixed(2)
+console.log(" total cost: $"+ convert)
+console.log(" Your order has been placed")
+console.log("--------------------------------------------------------")
+}
+})
 
 }
